@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useAuth } from '../context/AuthUserContext';
+
+import styles from 'styles/Home.module.css';
 
 import {Container, Row, Col, Button, Form, FormGroup, Label, Input, Alert} from 'reactstrap';
 
@@ -11,35 +13,54 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const router = useRouter();
-  const { signInWithEmailAndPassword } = useAuth();
+  const { signInWithEmailAndPassword, signInWithCustomToken } = useAuth();
 
-  const onSubmit = event => {
+  // Listen for changes on loading and authUser, redirect if needed
+  useEffect(() => {
+    const attemptSignIn = async () => {
+      try {
+        console.log("hi");
+        await signInWithCustomToken();
+        router.push('/logged_in');
+      } catch(error) {
+        console.log(error);
+    }}
+    attemptSignIn();
+  }, [])
+
+  const onSubmit = async (event) => {
     setError(null)
-    signInWithEmailAndPassword(email, password)
-    .then(authUser => {
-      console.log("Success. The user is created in firebase")
+    try {
+      const user = await signInWithEmailAndPassword(email, password);
+      console.log("Success. The user is created in firebase");
+      const uid  = user.user.uid;
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/getCustomToken", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ uid }),
+      });
+      const data = await response.json();
+      localStorage.setItem("customToken", data.customToken);
       router.push('/logged_in');
-    })
-    .catch(error => {
+    } catch(error) {
       setError(error.message)
-    });
+    }
     event.preventDefault();
   };
 
   return (
-    <Container className="text-center" style={{ padding: '40px 0px'}}>
-      <Row>
-        <Col>
+    <Container className={styles.container}>
+      <Row style ={{marginBottom: "20px"}}>
+        <Col className={styles.centerLabel}>
           <h2>Login</h2>
         </Col>
       </Row>
-      <Row style={{maxWidth: '400px', margin: 'auto'}}>
-        <Col>
-          <Form onSubmit={onSubmit}>
+          <Form>
           { error && <Alert color="danger">{error}</Alert>}
             <FormGroup row>
-              <Label for="loginEmail" sm={4}>Email</Label>
-              <Col sm={8}>
+              <Col>
                 <Input
                   type="email"
                   value={email}
@@ -50,8 +71,7 @@ export default function Home() {
               </Col>
             </FormGroup>
             <FormGroup row>
-              <Label for="loginPassword" sm={4}>Password</Label>
-              <Col sm={8}>
+              <Col>
                 <Input
                   type="password"
                   name="password"
@@ -62,8 +82,8 @@ export default function Home() {
               </Col>
             </FormGroup>
             <FormGroup row>
-             <Col>
-               <Button>Login</Button>
+             <Col className={styles.centerLabel}>
+               <Button onClick={onSubmit}>Login</Button>
              </Col>
            </FormGroup>
            <FormGroup row>
@@ -72,8 +92,6 @@ export default function Home() {
             </Col>
           </FormGroup>
           </Form>
-        </Col>
-      </Row>
     </Container>
   )
 }

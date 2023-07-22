@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "build-extension": "next build && next export && mv ./out/_next ./out/next && cd ./out && grep -rl '/_next' * | xargs sed -i 's|/_next|/next|g'"
   },
   "dependencies": {
     "bootstrap": "^4.6.0",
@@ -13,8 +14,10 @@
     "jwt-decode": "^3.1.2",
     "next": "latest",
     "next-firebase-auth-edge": "^0.7.6",
+    "next-plausible": "^3.10.1",
     "react": "latest",
     "react-dom": "latest",
+    "react-icons": "^4.10.1",
     "reactstrap": "^8.9.0"
   },
   "devDependencies": {

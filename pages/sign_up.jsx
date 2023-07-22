@@ -5,6 +5,10 @@ import { useAuth } from '../context/AuthUserContext';
 
 import {Container, Row, Col, Button, Form, FormGroup, Label, Input, Alert} from 'reactstrap';
 
+import { TiArrowBackOutline } from "react-icons/ti";
+
+import styles from 'styles/Home.module.css';
+
 const SignUp = () => {
   const [email, setEmail] = useState("");
   const [passwordOne, setPasswordOne] = useState("");
@@ -31,15 +35,22 @@ const SignUp = () => {
     event.preventDefault();
   };
 
+  const backToLogin = () => {
+    router.push("/");
+  }
+
   return (
-    <Container className="text-center" style={{ padding: '40px 0px'}}>
-      <Row>
-        <Col>
-          <Form style={{maxWidth: '400px', margin: 'auto'}} onSubmit={onSubmit}>
+    <Container className={styles.container}>
+      <TiArrowBackOutline onClick={backToLogin} style={{position: "absolute", top: "10px", left: "15px", fontSize: "2em"}}> Back</TiArrowBackOutline>
+      <Row style ={{marginBottom: "20px"}}>
+        <Col className={styles.centerLabel}>
+          <h2>Sign Up</h2>
+        </Col>
+      </Row>
+          <Form onSubmit={onSubmit}>
           { error && <Alert color="danger">{error}</Alert>}
             <FormGroup row>
-              <Label for="signUpEmail" sm={4}>Email</Label>
-              <Col sm={8}>
+              <Col>
                 <Input
                   type="email"
                   value={email}
@@ -50,8 +61,7 @@ const SignUp = () => {
               </Col>
             </FormGroup>
             <FormGroup row>
-              <Label for="signUpPassword" sm={4}>Password</Label>
-              <Col sm={8}>
+              <Col>
                 <Input
                   type="password"
                   name="passwordOne"
@@ -62,25 +72,22 @@ const SignUp = () => {
               </Col>
             </FormGroup>
             <FormGroup row>
-              <Label for="signUpPassword2" sm={4}>Confirm Password</Label>
-              <Col sm={8}>
+              <Col>
                 <Input
                   type="password"
                   name="password"
                   value={passwordTwo}
                   onChange={(event) => setPasswordTwo(event.target.value)}
                   id="signUpPassword2"
-                  placeholder="Password" />
+                  placeholder="Confirm Password" />
               </Col>
             </FormGroup>
             <FormGroup row>
-             <Col>
+             <Col className={styles.centerLabel}>
                <Button>Sign Up</Button>
              </Col>
            </FormGroup>
           </Form>
-        </Col>
-      </Row>
     </Container>
   )
 }

@@ -3,7 +3,12 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthUserContext';
 
 import { Container, Row, Col, Button, Input, FormGroup } from 'reactstrap';
-import jwt_decode from "jwt-decode";
+
+import styles from 'styles/Home.module.css';
+
+function parseJwt(token) {
+  return JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+}
 
 const LoggedIn = () => {
   const { authUser, loading, signOut, requestJwtToken } = useAuth();
@@ -14,7 +19,7 @@ const LoggedIn = () => {
 
   const onRequestJwtToken = async () => {
     const rawToken = await requestJwtToken();
-    const decodedToken = jwt_decode(rawToken);
+    const decodedToken = parseJwt(rawToken);
     setJwtToken(JSON.stringify(decodedToken));
   }
 
@@ -22,10 +27,10 @@ const LoggedIn = () => {
     event.preventDefault();
 
     const txData = claimData;
-    
+
     const { uid } = authUser;
     try {
-      const response = await fetch("/api/custom-claims/route", {
+      const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/setTxData", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,6 +45,15 @@ const LoggedIn = () => {
     };
   }
 
+  const sendTx = async () => {
+    
+  }
+
+  const reject = async () => {
+
+  }
+
+
   // Listen for changes on loading and authUser, redirect if needed
   useEffect(() => {
     if (!loading && !authUser)
@@ -47,44 +61,44 @@ const LoggedIn = () => {
   }, [authUser, loading])
 
   return (
-    <Container>
-
+    <Container className={styles.container}>
       {
-        loading ?
+        loading ? 
           <Row>
             <Col>Loading....</Col>
-          </Row> :
-          <>
-            <Row>
-              <Col>
-                {authUser && <div>Congratulations {authUser?.email}! You are logged in.</div>}
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Button onClick={signOut}>Sign out</Button>
-              </Col>
-            </Row>
-          </>
-      }
+          </Row> : (
 
-      <Button onClick={onRequestJwtToken}>Get JWT Token</Button>
+          <>
+          <Row className={styles.topRow}>
+              <Button>Network</Button>
+              <Button onClick={signOut}>Sign out</Button>
+          </Row>
+          <Row className={styles.labelRow}>
+          <div className={styles.centerLabel}>
+            <Input readOnly value="0x19999" size="5">  </Input>
+          </div>
+        </Row>
+        <Row className={styles.nativeRow}>
+          <div className={styles.centerLabel} style={{fontSize: "2.5em"}}>
+            0.5 ETH
+          </div>
+        </Row>
+        </>
+      )}
+
       <FormGroup>
         <Input
           type="textarea"
+          placeholder='TX Data'
           value={jwtToken || ''}
           readOnly
           style={{ width: "100%", wordBreak: "break-all" }}
           rows={5}
         />
       </FormGroup>
-      <FormGroup>
-        <Input
-          type="text"
-          placeholder="Claim Data"
-          onChange={(event) => setClaimData(event.target.value)}
-        />
-        <Button onClick={onSubmitClaim}>Set Claim</Button>
+      <FormGroup  style={{ display: 'flex', justifyContent: 'space-between'}}>
+        <Button onClick={sendTx} style={{ marginLeft: '40px', fontSize: '1.2em' }} >Accept</Button>
+        <Button onClick={reject} style={{ marginRight:'40px', fontSize: '1.2em' }}>Reject</Button>
       </FormGroup>
     </Container>
   )

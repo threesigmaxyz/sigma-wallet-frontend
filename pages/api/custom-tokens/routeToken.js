@@ -1,6 +1,6 @@
 import { getFirebaseAuth } from "next-firebase-auth-edge/lib/auth";
 
-const { setCustomUserClaims } = getFirebaseAuth(
+const { createCustomToken } = getFirebaseAuth(
   {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     clientEmail: process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL,
@@ -10,14 +10,10 @@ const { setCustomUserClaims } = getFirebaseAuth(
 );
 
 export default async (req, res) => {
-  const { uid, txData } = req.body;
-  await setCustomUserClaims(uid, {
-    txData: txData
-  });
+  const { uid } = req.body;
+  console.log(uid);
+  const customToken = await createCustomToken(uid);
 
   // Respond with a success message
-  return {
-    status: 200,
-    body: JSON.stringify({ success: true }),
-  };
+  return res.status(200).json(JSON.stringify({ customToken: customToken }));
 }

@@ -31,14 +31,22 @@ export default function useFirebaseAuth() {
     setLoading(true);
   };
 
-  const signInWithEmailAndPassword = (email, password) =>
+  const signInWithEmailAndPassword = (email, password) => 
     firebase.auth().signInWithEmailAndPassword(email, password);
+  
+
+  const signInWithCustomToken = async () => {
+    const customToken = localStorage.getItem("customToken");
+    await firebase.auth().signInWithCustomToken(customToken);
+  }
 
   const createUserWithEmailAndPassword = (email, password) =>
     firebase.auth().createUserWithEmailAndPassword(email, password);
 
-  const signOut = () =>
+  const signOut = () => {
+    localStorage.removeItem("customToken");
     firebase.auth().signOut().then(clear);
+  };
 
   const requestJwtToken = async () => {
     const token = await firebase.auth().currentUser.getIdToken(true);
@@ -56,6 +64,7 @@ export default function useFirebaseAuth() {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
-    requestJwtToken
+    requestJwtToken,
+    signInWithCustomToken
   };
 }

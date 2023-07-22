@@ -3,7 +3,16 @@ This is the codebase illustrated in the article: [Implementing authentication in
 
 To run it, simply install and run:
 ```
-yarn && yarn dev
+yarn && yarn start
 ```
 
 Tip: Don't forget to add a .env.local file with your firebase credentials.
+
+# Deploy to browser extension
+
+```
+npx next build
+npx next export
+
+
+```
