@@ -24,7 +24,8 @@ const SignUp = () => {
     if(passwordOne === passwordTwo)
       createUserWithEmailAndPassword(email, passwordOne)
       .then(authUser => {
-        console.log("Success. The user is created in firebase")
+        console.log("Success. The user is created in firebase");
+
         router.push("/logged_in");
       })
       .catch(error => {
