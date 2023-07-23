@@ -37,8 +37,7 @@ export default function useFirebaseAuth() {
 
   const signInWithGoogle = async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await firebase.auth().signInWithPopup(provider);
-    localStorage.setItem("user", result);
+    return await firebase.auth().signInWithPopup(provider);
   }
 
   const getRedirectResult = async () => 

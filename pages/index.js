@@ -22,8 +22,7 @@ export default function Home() {
   useEffect(() => {
     const attemptSignIn = async () => {
       try {
-        //const result = await getRedirectResult();
-        const result = localStorage.getItem("user");
+        const result = await getRedirectResult();
         if (result && result.user) {
           await authenticate(result);
         } else {

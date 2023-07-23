@@ -30,7 +30,7 @@ const LoggedIn = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [balance, setBalance] = useState(0);
   const [signature, setSignature] = useState("");
-  const [chain, setChain] = useState("Sepolia");
+  const [chain, setChain] = useState("ZkSync");
   const [time, setTime] = useState(new Date());
 
 
@@ -43,7 +43,7 @@ const LoggedIn = () => {
     try {
       const abiCoder = new ethers.utils.AbiCoder();
 
-      const txData = chain != 'Sepolia' ? "0x" : "b61d27f6" + abiCoder.encode(["address", "uint256", "bytes"], [transferTarget, transferAmount, "0x"]).slice(2);
+      const txData = chain != 'Sepolia' ? "0x" : "0xb61d27f6" + abiCoder.encode(["address", "uint256", "bytes"], [transferTarget, transferAmount, "0x"]).slice(2);
       setTxData(txData);
 
       const { uid } = authUser;
@@ -96,6 +96,7 @@ const LoggedIn = () => {
         },
         body: JSON.stringify(body),
       });
+      setTxData("");
     } catch (error) {
       console.error("Error while fetching:", error);
     };
@@ -112,17 +113,17 @@ const LoggedIn = () => {
     const init = async () => {
       try {
         if (chain != "Sepolia") {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/zksync/${uid}`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/zksync/${authUser.uid}`, {
             method: "GET",
           });
           const data = await response.json();
-          setWalletAddress(data.address);
+          setWalletAddress("0x1aCe2Ea8F0Dc672a702808605c48853F06332A17"); //data.address
         
         } else {
           const provider = new ethers.providers.JsonRpcProvider(chainData[chain].rpcUrl);
           const factory = new ethers.Contract(chainData[chain].factoryAddress, walletFactoryAbi, provider);
           const walletAddressRead = await factory.getAddress(authUser.uid, 0);
-          setWalletAddress(walletAddressRead);
+          setWalletAddress("0x1aCe2Ea8F0Dc672a702808605c48853F06332A17"); // walletAddressRead
         }
 
       } catch (error) {
