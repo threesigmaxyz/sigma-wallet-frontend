@@ -31,16 +31,21 @@ const LoggedIn = () => {
   const [balance, setBalance] = useState(0);
   const [signature, setSignature] = useState("");
   const [chain, setChain] = useState("Sepolia");
+  const [time, setTime] = useState(new Date());
+
 
   const chainData = {
-    "Sepolia" : { factory: process.env.NEXT_PUBLIC_SEPOLIA_FACTORY, rpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL, native: "SepoliaETH"},
-    "ZkSync" : { factory: process.env.NEXT_PUBLIC_ZKSYNC_FACTORY, rpcUrl: process.env.NEXT_PUBLIC_ZKSYNC_RPC_URL, native: "ETH"},
+    "Sepolia" : { factory: process.env.NEXT_PUBLIC_SEPOLIA_FACTORY, rpcUrl: process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL, factoryAddress: process.env.NEXT_PUBLIC_SEPOLIA_FACTORY, native: "SepoliaETH"},
+    "ZkSync" : { factory: process.env.NEXT_PUBLIC_ZKSYNC_FACTORY, rpcUrl: process.env.NEXT_PUBLIC_ZKSYNC_RPC_URL, factoryAddress: process.env.NEXT_PUBLIC_ZKSYNC_FACTORY, native: "ETH"},
   };
 
   const onRequestJwtToken = async () => {
     try {
       const abiCoder = new ethers.utils.AbiCoder();
-      const txData = "b61d27f6" + abiCoder.encode(["address", "uint256", "bytes"], [transferTarget, transferAmount, "0x"]).slice(2);
+
+      const txData = chain != 'Sepolia' ? "0x" : "b61d27f6" + abiCoder.encode(["address", "uint256", "bytes"], [transferTarget, transferAmount, "0x"]).slice(2);
+      setTxData(txData);
+
       const { uid } = authUser;
       await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + "/setTxData", {
         method: "POST",
@@ -53,10 +58,13 @@ const LoggedIn = () => {
       const header = parseJwtHeader(rawToken);
       const payload = parseJwtPayload(rawToken);
       const signatureRead = parseJwtSignature(rawToken);
-      const signatureComputed = abiCoder.encode(["string", "string", "string", "string"], ["Google", JSON.stringify(header), JSON.stringify(payload), signatureRead]);
+      const signatureComputed = abiCoder.encode(
+        ["string", "string", "string", "string"],
+        ["Google", JSON.stringify(header), JSON.stringify(payload), signatureRead]
+      );
       setSignature(signatureComputed);
-      setTxData(payload.txData);
       setIsTransferClicked(false);
+      
     }
       catch (error) {
         console.error("Error while fetching:", error);
@@ -70,9 +78,16 @@ const LoggedIn = () => {
 
   const sendTx = async () => {
     const { uid } = authUser;
-    const endpoint = chain == "ZKSync" ? "/sendTxZKSync" : "/sendTxERC4337";
+    const endpoint = chain != "Sepolia" ? "/zksync/tx" : "/sendTxERC4337";
+    
     let body = { uid, txData, signature };
-    if (chain != "ZKSync") body["chain"] = chain;
+    if (chain == "Sepolia") {
+      body["chain"] = chain;
+    } else {
+      body["recipient"] = transferTarget;
+      body["value"] = transferAmount;
+    }
+    
     try {
       await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + endpoint, {
         method: "POST",
@@ -95,16 +110,23 @@ const LoggedIn = () => {
   // Listen for changes on loading and authUser, redirect if needed
   useEffect(() => {
     const init = async () => {
-      if (!authUser) return;
       try {
-        const factoryAddress = chainData[chain].factory;
-        const rpcUrl = chainData[chain].rpcUrl;
-        const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-        const factory = new ethers.Contract(factoryAddress, walletFactoryAbi, provider);
-        const walletAddressRead = await factory.getAddress(authUser.uid, 0);
-        setWalletAddress(walletAddressRead);
+        if (chain != "Sepolia") {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/zksync/${uid}`, {
+            method: "GET",
+          });
+          const data = await response.json();
+          setWalletAddress(data.address);
+        
+        } else {
+          const provider = new ethers.providers.JsonRpcProvider(chainData[chain].rpcUrl);
+          const factory = new ethers.Contract(chainData[chain].factoryAddress, walletFactoryAbi, provider);
+          const walletAddressRead = await factory.getAddress(authUser.uid, 0);
+          setWalletAddress(walletAddressRead);
+        }
+
       } catch (error) {
-        setWalletAddress("0xff07F25C4753BE90D919A908F54Eb64adA79DD3d");
+        setWalletAddress("0x0");
         console.error("Error while fetching:", error);
       }
     }
@@ -114,31 +136,28 @@ const LoggedIn = () => {
     else {
       init();
     }
-  }, [authUser, loading])
+  }, [authUser, loading, chain])
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (!walletAddress) return;
+    const interval = setInterval(async () => {
       try {
-        await setBalanceHandler(chain);
+        await setBalanceHandler();
       } catch (error) {
+        setBalance(0.0000);
         console.error("Error while fetching:", error);
       }
+      setTime(new Date());
     }, 1000);
-    return () => clearTimeout(timer);
-  }, [walletAddress, chain]);
 
-  const setBalanceHandler = async (newChain) => {
-    const rpcUrl = chainData[newChain].rpcUrl;
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    return () => clearInterval(interval);
+  }, [chain, walletAddress]);
+
+  const setBalanceHandler = async () => {
+    if (walletAddress == "0x0") return;
+    const provider = new ethers.providers.JsonRpcProvider(chainData[chain].rpcUrl);
     const walletBalance = await provider.getBalance(walletAddress);
     setBalance((Number(walletBalance)/1e18).toFixed(4));
   }
-
-  const changeChain = async (newChain) => {
-      setChain(newChain);
-      await setBalanceHandler(newChain);
-    }
 
   return (
     <Container className={styles.container}>
@@ -158,10 +177,10 @@ const LoggedIn = () => {
               caret
             />
             <DropdownMenu>
-              {chain != "ZkSync" && <DropdownItem onClick={event => changeChain("ZkSync")}>
+              {chain != "ZkSync" && <DropdownItem onClick={event => setChain("ZkSync")}>
                 ZkSync
               </DropdownItem>}
-              {chain != "Sepolia" && <DropdownItem onClick={event => changeChain("Sepolia")}>
+              {chain != "Sepolia" && <DropdownItem onClick={event => setChain("Sepolia")}>
                 Sepolia
               </DropdownItem>}
             </DropdownMenu>

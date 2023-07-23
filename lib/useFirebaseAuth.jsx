@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import firebase from './firebase';
 
+
 const formatAuthUser = (user) => ({
   uid: user.uid,
   email: user.email
@@ -33,8 +34,17 @@ export default function useFirebaseAuth() {
 
   const signInWithEmailAndPassword = (email, password) => 
     firebase.auth().signInWithEmailAndPassword(email, password);
-  
 
+  const signInWithGoogle = async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await firebase.auth().signInWithPopup(provider);
+    localStorage.setItem("user", result);
+  }
+
+  const getRedirectResult = async () => 
+    await firebase.auth().getRedirectResult();
+    
+  
   const signInWithCustomToken = async () => {
     const customToken = localStorage.getItem("customToken");
     await firebase.auth().signInWithCustomToken(customToken);
@@ -65,6 +75,8 @@ export default function useFirebaseAuth() {
     createUserWithEmailAndPassword,
     signOut,
     requestJwtToken,
-    signInWithCustomToken
+    signInWithCustomToken,
+    signInWithGoogle,
+    getRedirectResult
   };
 }

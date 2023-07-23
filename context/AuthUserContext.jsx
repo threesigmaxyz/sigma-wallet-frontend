@@ -8,7 +8,9 @@ const authUserContext = createContext({
   createUserWithEmailAndPassword: async () => {},
   signOut: async () => {},
   requestJwtToken: async () => {},
-  signInWithCustomToken: async () => {}
+  signInWithCustomToken: async () => {},
+  signInWithGoogle: async () => {},
+  getRedirectResult: async () => {}
 });
 
 export function AuthUserProvider({ children }) {
