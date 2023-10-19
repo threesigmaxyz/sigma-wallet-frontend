@@ -1,0 +1,26 @@
+diff --git a/node_modules/next-auth/core/lib/oauth/checks.js b/node_modules/next-auth/core/lib/oauth/checks.js
+index 70fa576..4d31122 100644
+--- a/node_modules/next-auth/core/lib/oauth/checks.js
++++ b/node_modules/next-auth/core/lib/oauth/checks.js
+@@ -124,7 +124,7 @@ const nonce = {
+ 
+     if (!((_options$provider$che4 = options.provider.checks) !== null && _options$provider$che4 !== void 0 && _options$provider$che4.includes("nonce"))) return;
+ 
+-    const value = _openidClient.generators.nonce();
++    const value = resParams.nonce || _openidClient.generators.nonce();
+ 
+     resParams.nonce = value;
+     const maxAge = (_options$cookies$nonc = options.cookies.nonce.options.maxAge) !== null && _options$cookies$nonc !== void 0 ? _options$cookies$nonc : NONCE_MAX_AGE;
+diff --git a/node_modules/next-auth/src/core/lib/oauth/checks.ts b/node_modules/next-auth/src/core/lib/oauth/checks.ts
+index f497012..f256b3b 100644
+--- a/node_modules/next-auth/src/core/lib/oauth/checks.ts
++++ b/node_modules/next-auth/src/core/lib/oauth/checks.ts
+@@ -143,7 +143,7 @@ export const nonce = {
+     resParams: AuthorizationParameters
+   ) {
+     if (!options.provider.checks?.includes("nonce")) return
+-    const value = generators.nonce()
++    const value = resParams.nonce || generators.nonce()
+     resParams.nonce = value
+     const maxAge = options.cookies.nonce.options.maxAge ?? NONCE_MAX_AGE
+     cookies.push(await signCookie("nonce", value, maxAge, options))
