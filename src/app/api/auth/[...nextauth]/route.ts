@@ -1,5 +1,7 @@
 import NextAuth from "next-auth/next";
 import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
+import AzureADProvider from "next-auth/providers/azure-ad"; 
 
 const handler = NextAuth({
   providers: [
@@ -9,6 +11,31 @@ const handler = NextAuth({
       authorization: {
         params: {
           scope: "openid"
+        },
+      },
+      checks: ["nonce"]
+    }),
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID ?? "",
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET ?? "",
+      authorization: {
+        url: "https://www.facebook.com/v15.0/dialog/oauth",
+        params: {
+          scope: "openid",
+        },
+      },
+      checks: ["nonce"],
+      idToken: true,
+      issuer: "https://www.facebook.com",
+      jwks_endpoint: "https://www.facebook.com/.well-known/oauth/openid/jwks/",
+    }),
+    AzureADProvider({
+      clientId: process.env.AZURE_AD_CLIENT_ID ?? "",
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET ?? "",
+      tenantId: process.env.AZURE_AD_TENANT_ID,
+      authorization: {
+        params: {
+          scope: "openid",
         },
       },
       checks: ["nonce"]

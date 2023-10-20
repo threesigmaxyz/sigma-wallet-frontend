@@ -10,8 +10,10 @@ const SigninButton = () => {
   if (session && session.user) {
     return (
       <div className="flex gap-4 ml-auto">
-        <input style={{ color: 'black' }} type="text" value={nonce} onChange={(e) => setNonce(e.target.value)} />  
-        <button onClick={() => signIn('google', {}, {nonce: nonce})}>Update</button>
+        <input style={{ color: 'black' }} type="text" value={nonce} onChange={(e) => setNonce(e.target.value)} />
+        <button onClick={() => signIn('google', {}, { nonce: nonce })}>Update Google</button>
+        <button onClick={() => signIn('facebook', {}, { nonce: nonce })}>Update Facebook</button>
+        <button onClick={() => signIn('azure-ad', {}, { nonce: nonce })}>Update Microsoft</button>
         <p className="text-sky-600">{session.user.name}</p>
         <button onClick={() => signOut()} className="text-red-600">
           Sign Out
@@ -20,7 +22,7 @@ const SigninButton = () => {
     );
   }
   return (
-    <button onClick={() => signIn('google')} className="text-green-600 ml-auto">
+    <button onClick={() => signIn()} className="text-green-600 ml-auto">
       Sign In
     </button>
   );
